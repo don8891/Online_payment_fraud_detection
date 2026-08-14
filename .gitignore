@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Flask & Web
+instance/
+.webassets-cache
+
+# Node / React (Frontend)
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.npm
+*.log
+
+# Datasets & ML Artifacts (Raw IEEE-CIS, Interim, Processed, Artifacts)
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/artifacts/*
+!data/artifacts/.gitkeep
+
+# Trained Models & Binary Files
+models/*
+!models/.gitkeep
+*.pkl
+*.h5
+*.pt
+*.pth
+*.onnx
+*.joblib
+
+# Environment Variables & Security Credentials
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE & OS Specific
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
