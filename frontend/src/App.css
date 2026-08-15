@@ -67,5 +67,17 @@
 .connection-status {
   font-size: 1rem;
   font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.connection-status.status-checking {
   color: #f59e0b;
+}
+
+.connection-status.status-connected {
+  color: #10b981;
+}
+
+.connection-status.status-failed {
+  color: #ef4444;
 }
