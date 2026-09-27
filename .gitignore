@@ -25,6 +25,7 @@ frontend/build/
 *.log
 
 # Datasets & ML Artifacts (Raw IEEE-CIS, Interim, Processed, Artifacts)
+*.csv
 data/raw/*
 !data/raw/.gitkeep
 data/interim/*
@@ -33,6 +34,9 @@ data/processed/*
 !data/processed/.gitkeep
 data/artifacts/*
 !data/artifacts/.gitkeep
+
+# Federated client bank datasets (partitioned transaction data)
+federated/data/
 
 # Trained Models & Binary Files
 models/*
@@ -58,3 +62,6 @@ models/*
 *.swo
 .DS_Store
 Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
