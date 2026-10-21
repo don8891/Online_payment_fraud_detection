@@ -171,7 +171,7 @@ export default function Dashboard() {
         {/* Performance Bar Chart */}
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm lg:col-span-2">
           <h3 className="text-sm font-bold text-slate-800 mb-1">Fraud Detection Performance</h3>
-          <p className="text-xs text-slate-500 mb-4">Test set evaluation metrics — LightGBM</p>
+          <p className="text-xs text-slate-500 mb-4">Test set evaluation metrics — FedProx DNN</p>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={PERFORMANCE_METRICS_DATA} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
