@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.abspath('.'))
+
 import flwr as fl
 
 from federated.client import FraudClient

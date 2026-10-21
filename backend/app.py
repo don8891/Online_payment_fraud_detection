@@ -26,7 +26,7 @@ def create_app(config_class=Config):
         """
         return jsonify({
             "status": "ok",
-            "model": "LightGBM",
+            "model": "FedProx DNN",
             "num_features": len(fraud_model.feature_names),
             "threshold": fraud_model.threshold
         }), 200
@@ -52,7 +52,7 @@ def create_app(config_class=Config):
     @app.route('/api/predict', methods=['POST'])
     def predict():
         """
-        Endpoint for uploaded transaction CSV predictions using LightGBM model.
+        Endpoint for uploaded transaction CSV predictions using FedProx DNN model.
         """
         if 'file' not in request.files:
             return jsonify({

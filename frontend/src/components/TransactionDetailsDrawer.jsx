@@ -10,7 +10,8 @@ export default function TransactionDetailsDrawer({ transaction, onClose }) {
     fraud_probability,
     prediction,
     risk_level,
-    raw_features = {}
+    raw_features = {},
+    explanation = []
   } = transaction;
 
   const isFraud = prediction === 1;
@@ -68,7 +69,7 @@ export default function TransactionDetailsDrawer({ transaction, onClose }) {
                   <h4 className={`text-base font-extrabold ${isFraud ? 'text-rose-900' : 'text-emerald-900'}`}>
                     {isFraud ? 'Flagged Fraud' : 'Legitimate Transaction'}
                   </h4>
-                  <p className="text-xs text-slate-500">Evaluation threshold: 0.20</p>
+                  <p className="text-xs text-slate-500">Evaluation threshold: 0.90</p>
                 </div>
               </div>
 
@@ -94,7 +95,7 @@ export default function TransactionDetailsDrawer({ transaction, onClose }) {
               <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
                 <div
                   className={`h-full ${
-                    fraud_probability >= 0.70 ? 'bg-rose-600' : fraud_probability >= 0.20 ? 'bg-amber-500' : 'bg-emerald-500'
+                    fraud_probability >= 0.90 ? 'bg-rose-600' : fraud_probability >= 0.70 ? 'bg-amber-500' : 'bg-emerald-500'
                   }`}
                   style={{ width: `${Math.min(100, Math.max(4, fraud_probability * 100))}%` }}
                 />
@@ -118,10 +119,60 @@ export default function TransactionDetailsDrawer({ transaction, onClose }) {
               <HelpCircle size={15} className="text-blue-600" />
               Why was this transaction flagged?
             </h4>
-            <p className="text-xs text-slate-500 leading-relaxed italic bg-white p-3 rounded-lg border border-slate-200/80">
-              Explainability will be available in a future version.
-            </p>
+            {explanation.length > 0 ? (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  These features show which inputs push the model output higher or lower.
+                  They describe model behavior, not causes of fraud.
+                </p>
+
+                {explanation.map((item, index) => {
+                  const positive = item.shap_value > 0;
+
+                  return (
+                    <div
+                      key={`${item.feature}-${index}`}
+                      className="bg-white p-3 rounded-lg border border-slate-200"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xs font-semibold text-slate-800 break-all">
+                          {item.feature}
+                        </span>
+
+                        <span
+                          className={`text-[10px] font-bold rounded-full px-2 py-1 ${
+                            positive
+                              ? 'bg-rose-100 text-rose-700'
+                              : item.shap_value < 0
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          {positive
+                            ? 'Raises output'
+                            : item.shap_value < 0
+                            ? 'Lowers output'
+                            : 'Neutral'}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex items-center justify-between text-xs">
+                        <span className="text-slate-500">SHAP value</span>
+                        <strong className="font-mono text-slate-700">
+                          {Number(item.shap_value).toFixed(6)}
+                        </strong>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 leading-relaxed bg-white p-3 rounded-lg border border-slate-200/80">
+                No SHAP explanation was returned for this transaction. Check the backend response.
+              </p>
+            )}
           </div>
+
 
           {/* Existing Raw Features Categorized */}
           <div className="space-y-5">

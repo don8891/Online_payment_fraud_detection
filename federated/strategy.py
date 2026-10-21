@@ -16,6 +16,7 @@ from pathlib import Path
 
 import logging
 import torch
+import flwr as fl
 
 from federated.model import FraudDNN
 
@@ -90,17 +91,113 @@ class FedProxStrategy(FedAvg):
         Forwarded to flwr.server.strategy.FedAvg.
     """
 
-    def __init__(self, proximal_mu: float = 0.01, **kwargs):
+    def __init__(self, proximal_mu: float = 0.01, local_epochs: int = 1, **kwargs):
         super().__init__(**kwargs)
         self.proximal_mu = proximal_mu
-        logger.info("FedProxStrategy initialised with μ = %.4f", proximal_mu)
+        self.local_epochs = local_epochs
+        logger.info(
+            "FedProxStrategy initialised with μ = %.4f, local_epochs = %d",
+            proximal_mu, local_epochs
+        )
+
+    # --------------------------------------------------
+    # Send FedProx configuration to clients
+    # --------------------------------------------------
+
+    def configure_fit(
+        self,
+        server_round,
+        parameters,
+        client_manager
+    ):
+        """Send FedProx configuration to every selected client."""
+
+        config = {
+            "proximal_mu": self.proximal_mu,
+            "local_epochs": self.local_epochs,
+        }
+
+        fit_ins = fl.common.FitIns(
+            parameters,
+            config
+        )
+
+        clients = client_manager.sample(
+            num_clients=self.min_fit_clients,
+            min_num_clients=self.min_available_clients,
+        )
+
+        return [
+            (client, fit_ins)
+            for client in clients
+        ]
 
     def aggregate_fit(self, server_round, results, failures):
-        aggregated = super().aggregate_fit(server_round, results, failures)
-        logger.info(
-            "[FedProx] Round %d – %d clients succeeded, %d failed.",
-            server_round, len(results), len(failures),
+
+        aggregated = super().aggregate_fit(
+            server_round,
+            results,
+            failures
         )
+
+        logger.info(
+            "[FedProx] Round %d - %d clients succeeded, %d failed.",
+            server_round,
+            len(results),
+            len(failures),
+        )
+
+        # --------------------------------------------------
+        # Save aggregated FedProx global model
+        # --------------------------------------------------
+
+        if aggregated[0] is not None:
+
+            parameters = aggregated[0]
+
+            arrays = parameters_to_ndarrays(
+                parameters
+            )
+
+            model = FraudDNN(
+                input_size=421
+            )
+
+            state_dict = model.state_dict()
+
+            for key, array in zip(
+                state_dict.keys(),
+                arrays
+            ):
+
+                state_dict[key] = torch.tensor(
+                    array
+                )
+
+            model.load_state_dict(
+                state_dict
+            )
+
+            save_path = (
+                Path("models")
+                / "fedprox_global_dnn.pth"
+            )
+
+            save_path.parent.mkdir(
+                parents=True,
+                exist_ok=True
+            )
+
+            torch.save(
+                model.state_dict(),
+                save_path
+            )
+
+            print(
+                f"Global FedProx model saved "
+                f"after round {server_round}"
+            )
+
         return aggregated
 
     def aggregate_evaluate(self, server_round, results, failures):
@@ -108,5 +205,8 @@ class FedProxStrategy(FedAvg):
             server_round, results, failures
         )
         if metrics:
-            logger.info("[FedProx] Round %d – eval metrics: %s", server_round, metrics)
+            logger.info(
+                "[FedProx] Round %d - eval metrics: %s",
+                server_round, metrics
+            )
         return loss_aggregated, metrics
