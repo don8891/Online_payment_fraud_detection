@@ -26,7 +26,7 @@ def create_app(config_class=Config):
         """
         return jsonify({
             "status": "ok",
-            "model": "FedProx DNN",
+            "model": fraud_model.model_name,
             "num_features": len(fraud_model.feature_names),
             "threshold": fraud_model.threshold
         }), 200

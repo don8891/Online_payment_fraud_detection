@@ -17,7 +17,8 @@ class FraudModelService:
         self.base_dir = Path(__file__).resolve().parents[2]
         models_dir = self.base_dir / "models"
 
-        self.model_path = models_dir / "fedprox_global_dnn.pth"
+        self.model_path = models_dir / "fedavg_global_dnn_30r.pth"
+        self.model_name = "FedAvg 30R DNN"
         self.medians = joblib.load(
             models_dir / "fedprox_train_medians.pkl"
         )
@@ -37,11 +38,11 @@ class FraudModelService:
 
         self.device = torch.device("cpu")
         self.model = FraudDNN(input_size=len(self.feature_names))
-        state = torch.load(self.model_path, map_location=self.device)
+        state = torch.load(self.model_path, map_location=self.device, weights_only=True)
         self.model.load_state_dict(state)
         self.model.eval()
 
-        self.threshold = 0.85
+        self.threshold = 0.89
 
         # SHAP background data using the same preprocessing pipeline (optional)
         if shap is not None:
@@ -63,7 +64,7 @@ class FraudModelService:
         else:
             self.shap_explainer = None
 
-        print("FedProx model loaded successfully.")
+        print(f"{self.model_name} loaded successfully.")
         print("Number of features:", len(self.feature_names))
         print("Fraud threshold:", self.threshold)
 
@@ -178,7 +179,7 @@ class FraudModelService:
 
         transactions = []
         for i, probability in enumerate(probabilities):
-            if probability >= 0.90:
+            if probability >= self.threshold:
                 risk = "HIGH"
             elif probability >= 0.50:
                 risk = "MEDIUM"
@@ -218,7 +219,7 @@ class FraudModelService:
                 "fraud_rate": round(fraud_count / total * 100, 2)
             },
             "model_info": {
-                "model": "FedProx DNN",
+                "model": self.model_name,
                 "num_features": len(self.feature_names),
                 "threshold": self.threshold
             },
